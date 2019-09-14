@@ -6,6 +6,7 @@ from flask import jsonify
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+import uuid
 import sqlite3
 import sqlalchemy
 
@@ -20,10 +21,18 @@ db = SQLAlchemy(app)
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String)
+    command = db.Column(db.String)
     status = db.Column(db.Integer)  # 0 = not started, 1 = started, 2 = done
 
-    def __repr__(self):
-        return f"Job(id={self.id}, filename={self.filename}, status={self.status})"
+    def serialize(self):
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'status': self.status,
+            'command': self.command,
+        }
+
+db.create_all()
 
 @app.route('/')
 def hello():
@@ -38,10 +47,17 @@ def upload():
     if file.filename == '':
         return jsonify({'status': 'Failed -- filename empty'}), 400
 
-    filename_base = str(uuid.uuid64().hex)
+    filename_base = str(uuid.uuid4().hex)
     filename = '{}.tar.gz'.format(filename_base)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     job = Job(filename = filename_base, status = 0)
     db.session.add(job)
     db.session.commit()
     return jsonify({"status": "Success"})
+
+@app.route('/api/jobs')
+def get_jobs():
+    jobs = Job.query.all()
+    jobs = [job.serialize() for job in jobs]
+    print(jobs)
+    return jsonify({"jobs": jobs})
