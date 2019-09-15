@@ -6,7 +6,7 @@ if [ -d $GPUPPY_DIR ]; then
     cd $GPUPPY_DIR
     git pull
 else
-    git clone https://github.com/as-com/gpuppy $GPUPPY_DIR
+    git clone git@github.com:as-com/gpuppy.git $GPUPPY_DIR
     cd $GPUPPY_DIR
 fi
 cd client-cli
