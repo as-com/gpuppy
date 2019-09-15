@@ -1,9 +1,11 @@
 const express = require('express');
+const http = require('http');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
 const uuidv4 = require('uuid/v4');
 const bodyParser = require('body-parser');
+const WebSocket = require('ws');
 
 const app = express();
 app.use(morgan('dev'));
@@ -40,6 +42,49 @@ const Job = mongoose.model('Job', {
     output: String,
 });
 
+const port = 3000;
+const server = http.createServer(app);
+const wss = new WebSocket.Server({server});
+
+const outputMap = {};
+const listenerMap = {};
+
+wss.on('connection', (ws) => {
+    const url = ws.url;
+    const regex = /\/(.+)\/(listen|push)/;
+
+    const m = regex.exec(str);
+    if (m === null) throw m;
+
+    const jobId = m[0];
+    const op = m[1];
+
+    if (op === 'listen') {
+        if (!listenerMap.hasOwnProperty(jobId)) {
+            listenerMap[jobId] = [];
+        }
+        listenerMap[jobId].push(ws);
+
+        if (!outputMap.hasOwnProperty(jobId)) {
+            outputMap[jobId] = "";
+        } else {
+            ws.send(outputMap[jobId]);
+        }
+    } else {
+        // op == 'push'
+        if (!outputMap.hasOwnProperty(jobId)) {
+            outputMap[jobId] = "";
+        }
+        ws.on('message', (message) => {
+            outputMap[jobId] += message;
+
+            listenerMap.forEach(listener => {
+                listener.send(message);
+            })
+        });
+    }
+});
+
 app.post('/api/jobs', upload.single('file'), function (req, res, next) {
     const filename = req.file.filename;
     const command = req.query.command;
@@ -73,7 +118,6 @@ app.post('/api/getJob', (req, res, next) => {
     })
 });
 
-const port = 3000;
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
