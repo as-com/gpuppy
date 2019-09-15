@@ -101,7 +101,7 @@ async function workerStats() {
     let gpuPower = 0;
 
     function readGpuStats() {
-        const proc = child_process.spawn("nvidia-smi stats -d gpuUtil,memUtil,pwrDraw");
+        const proc = child_process.exec("nvidia-smi stats -d gpuUtil,memUtil,pwrDraw");
 
         const rl = readline.createInterface({input: proc.stdout});
         rl.on('line', (input) => {
