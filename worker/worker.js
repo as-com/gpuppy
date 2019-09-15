@@ -121,6 +121,16 @@ async function workerStats() {
         })
     }
 
+    function readCpuStats() {
+        const proc = child_process.execSync("top -b -d1 -n1|grep -i \"Cpu(s)\"|head -c21|cut -d ' ' -f3|cut -d '%' -f1");
+        cpuUtil = 0 + proc.stdout;
+    }
+
+    function readMemStats() {
+        const proc = child_process.execSync("free | grep Mem | awk '{print $3/$2 * 100.0}'");
+        cpuMem = 0 + proc.stdout;
+    }
+
     async function pushStats() {
         await got(`${SERVER}/api/workers/${hostname}`, {
             method: "POST",
@@ -141,6 +151,7 @@ async function workerStats() {
             setTimeout(resolve, STAT_INTERVAL_MS);
         });
 
+        readCpuStats();
         pushStats();
     }
 }
