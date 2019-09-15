@@ -43,12 +43,21 @@ mongoose.connect('mongodb://localhost:27017/gpuppy', {
     console.log("DB connected!");
 });
 
-const Job = mongoose.model('Job', {
+const Job = mongoose.model('Job', mongoose.Schema({
     filename: String,
     command: String,
     status: {type: Number, default: 0},
     output: {type: String, default: ""},
-});
+}, {timestamps: true}));
+
+const Worker = mongoose.model('Worker', mongoose.Schema({
+    name: String,
+    gpuUtil: { type: Number, default: 0},
+    cpuUtil: { type: Number, default: 0},
+    gpuMem: { type: Number, default: 0},
+    cpuMem: { type: Number, default: 0},
+    gpuPower: { type: Number, default: 0},
+}, {timestamps: true}));
 
 const port = 3000;
 const server = http.createServer(app);
@@ -159,6 +168,29 @@ app.post('/api/jobs/:id/finish', (req, res, next) => {
                 return next(err);
             return res.json({'status': 'job_finished'})
         });
+    })
+});
+
+app.get('/api/workers', (req, res, next) => {
+    const aMinuteAgo = new Date( Date.now() - 1000 * 60 );
+    Worker.find({ updatedAt: { $gte: aMinuteAgo } }, (err, workers) => {
+        if (err)
+            return next(err);
+
+        return res.json(
+            workers.map(worker => worker.toObject())
+        )
+    })
+});
+
+app.post('/api/workers/:name', (req, res, next) => {
+    const name = req.params.name;
+    const update = req.body;
+    update.name = name;
+    Worker.findOneAndUpdate({name: name}, update, {upsert: true}, (err, worker) => {
+        if (err)
+            return next(err);
+        return res.json(worker)
     })
 });
 
