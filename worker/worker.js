@@ -152,6 +152,7 @@ async function workerStats() {
         });
 
         readCpuStats();
+        readMemStats();
         pushStats();
     }
 }
