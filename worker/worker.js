@@ -127,8 +127,8 @@ async function workerStats() {
     }
 
     function readCpuStats() {
-        const output = child_process.execSync("top -b -d1 -n1|grep -i \"Cpu(s)\"|head -c21|cut -d ' ' -f3|cut -d '%' -f1");
-        cpuUtil = 0 + output;
+        const output = child_process.execSync("top -b -d1 -n1|grep -i \"Cpu(s)\" | awk '{print $8}'");
+        cpuUtil = 100 - (0 + output);
     }
 
     function readMemStats() {

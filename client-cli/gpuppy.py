@@ -13,7 +13,7 @@ url_base = 'http://{}'.format(server)
 print("Indexing relevant files")
 filename = tempfile.mkstemp(suffix='.tar.gz')[1]
 
-os.system("tar -zcvf {} .".format(filename))
+os.system("tar --exclude .git -zcvf {} .".format(filename))
 
 print('Pushing tarball to server')
 files = {'file': open(filename, 'rb')}
