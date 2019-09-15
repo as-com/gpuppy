@@ -122,14 +122,13 @@ async function workerStats() {
     }
 
     function readCpuStats() {
-        const proc = child_process.execSync("top -b -d1 -n1|grep -i \"Cpu(s)\"|head -c21|cut -d ' ' -f3|cut -d '%' -f1");
-        console.log(proc.stdout);
-        cpuUtil = 0 + proc.stdout;
+        const output = child_process.execSync("top -b -d1 -n1|grep -i \"Cpu(s)\"|head -c21|cut -d ' ' -f3|cut -d '%' -f1");
+        cpuUtil = 0 + output;
     }
 
     function readMemStats() {
-        const proc = child_process.execSync("free | grep Mem | awk '{print $3/$2 * 100.0}'");
-        cpuMem = 0 + proc.stdout;
+        const output = child_process.execSync("free | grep Mem | awk '{print $3/$2 * 100.0}'");
+        cpuMem = 0 + output;
     }
 
     async function pushStats() {
