@@ -41,6 +41,11 @@ async function main() {
         console.log(extOut);
         fs.unlinkSync(path.join(dirname, "download.tar.gz"));
 
+        const pipInstall = child_process.execSync("pip install -r requirements.txt", {
+            cwd: dirname
+        });
+        console.log(pipInstall);
+
         let startTime;
         let exitCode;
         await new Promise((resolve, reject) => {
