@@ -7,6 +7,10 @@ import urllib
 import tempfile
 import websocket
 
+if len(sys.argv) < 2:
+    print("Usage: gpuppy <command>")
+    exit(0)
+
 server = "localhost:3000"
 url_base = 'http://{}'.format(server)
 
@@ -18,7 +22,7 @@ os.system("tar --exclude .git -zcvf {} .".format(filename))
 print('Pushing tarball to server')
 files = {'file': open(filename, 'rb')}
 parameters = {
-    'command': ' '.join(sys.argv[1:]),
+    'command': ' '.join(sys.argv[1:]).strip(),
 }
 print(parameters)
 r = requests.post(url_base + '/api/jobs', params=parameters, files=files)
