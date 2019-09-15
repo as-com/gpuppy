@@ -43,7 +43,7 @@ async function main() {
             const client = new WebSocket(`${WS_SERVER}/api/${theJob._id}/push/`);
             client.on("open", () => {
                 startTime = Date.now();
-                const p = child_process.exec("time " + theJob.command, {
+                const p = child_process.exec(theJob.command, {
                     cwd: dirname,
                     maxBuffer: 1024*1024*1024
                 });
