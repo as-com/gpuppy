@@ -10,21 +10,27 @@ console.log(SERVER, WS_SERVER);
 
 async function main() {
     while (true) {
+        await new Promise(resolve => {
+            setTimeout(resolve, 1000);
+        });
         const job = await got(`${SERVER}/api/getJob`, {
             method: "POST",
             json: true
         });
 
-        if (job.length === 0) {
+        if (job.body.length === 0) {
             continue;
         }
 
-        const theJob = job[0];
+        console.log(job.body);
+        const theJob = job.body[0];
+
+        // console.log(job);
 
         // Grab the tarball
         const dirname = "" + Date.now();
-        fs.writeFileSync("download.tar.gz", await got(`${SERVER}/api/datum/${theJob.filename}`));
         fs.mkdirSync(dirname);
+        fs.writeFileSync(path.join(dirname, "download.tar.gz"), (await got(`${SERVER}/api/datum/${theJob.filename}`, {encoding: null})).body);
         const extOut = child_process.execSync("tar -xf download.tar.gz", {
             cwd: dirname
         });
@@ -34,31 +40,33 @@ async function main() {
         await new Promise((resolve, reject) => {
             const client = new WebSocket(`${WS_SERVER}/api/${theJob._id}/push/`);
             client.on("open", () => {
-                const process = child_process.exec(theJob.command, {
+                const p = child_process.exec(theJob.command, {
                     cwd: dirname,
                     maxBuffer: 1024*1024*1024
                 });
 
-                process.stdout.on("data", (data) => {
+                p.stdout.on("data", (data) => {
+                    process.stdout.write(data);
                     client.send(data);
                 });
 
-                process.stderr.on("data", (data) => {
+                p.stderr.on("data", (data) => {
+                    process.stderr.write(data);
                     client.send(data);
                 });
 
-                process.on("close", () => {
+                p.on("close", () => {
                     client.close();
                     resolve();
                 })
             });
         });
 
-        const createOut = child_process.execSync("tar -xf upload.tar.gz .", {
+        const createOut = child_process.execSync("tar -cvzf upload.tar.gz .", {
             cwd: dirname
         });
 
-        await got(`${SERVER}/api/finishJob`, {
+        await got(`${SERVER}/api/jobs/${theJob._id}/finish`, {
             method: "POST",
             json: true,
             body: {
