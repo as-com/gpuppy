@@ -37,10 +37,13 @@ async function main() {
         console.log(extOut);
         fs.unlinkSync(path.join(dirname, "download.tar.gz"));
 
+        let startTime;
+        let exitCode;
         await new Promise((resolve, reject) => {
             const client = new WebSocket(`${WS_SERVER}/api/${theJob._id}/push/`);
             client.on("open", () => {
-                const p = child_process.exec(theJob.command, {
+                startTime = Date.now();
+                const p = child_process.exec("time " + theJob.command, {
                     cwd: dirname,
                     maxBuffer: 1024*1024*1024
                 });
@@ -55,12 +58,14 @@ async function main() {
                     client.send(data);
                 });
 
-                p.on("close", () => {
+                p.on("close", (code) => {
+                    exitCode = code;
                     client.close();
                     resolve();
                 })
             });
         });
+        let finishTime = Date.now();
 
         const createOut = child_process.execSync("tar -cvzf upload.tar.gz .", {
             cwd: dirname
@@ -70,7 +75,10 @@ async function main() {
             method: "POST",
             json: true,
             body: {
-                artifact: fs.readFileSync(path.join(dirname, "upload.tar.gz")).toString("base64")
+                artifact: fs.readFileSync(path.join(dirname, "upload.tar.gz")).toString("base64"),
+                startTime,
+                finishTime,
+                exitCode
             }
         });
 
