@@ -12,11 +12,13 @@ const fs = require('fs');
 const app = express();
 app.use(morgan('dev'));
 
+const filesizeLimit = '300mb';
+
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ limit: filesizeLimit, extended: false }));
 
 // parse application/json
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: filesizeLimit }));
 
 const upload = multer({
     storage: multer.diskStorage({
@@ -59,7 +61,7 @@ wss.on('connection', (ws, request) => {
     const url = request.url;
     const regex = /.+\/(.+?)\/(listen|push)/;
 
-    console.log(url);
+    //console.log(url);
     const m = regex.exec(url);
     if (m === null) throw m;
 
@@ -87,7 +89,7 @@ wss.on('connection', (ws, request) => {
         }
 
         ws.on('message', (message) => {
-            console.log(message);
+            //console.log(message);
             outputMap[jobId] += message;
 
             listenerMap[jobId].forEach(listener => {
@@ -103,9 +105,10 @@ app.post('/api/jobs', upload.single('file'), function (req, res, next) {
 
     const job = new Job({filename, command, status: 0});
     job.save()
-        .then(() => {
+        .then((job) => {
             res.json({
                 'status': 'job_queued',
+                'job_id': job._id,
             })
         })
         .catch(next);
@@ -143,7 +146,6 @@ app.post('/api/jobs/:id/finish', (req, res, next) => {
             return next(err);
 
         let output = "";
-        console.log(outputMap);
         if (outputMap.hasOwnProperty(jobId)) {
             output = outputMap[jobId];
             delete outputMap[jobId];
