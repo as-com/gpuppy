@@ -2,6 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {JobList} from "./JobList";
+import {Workers} from "./Workers";
 
 const App: React.FC = () => {
   return (
@@ -10,6 +11,7 @@ const App: React.FC = () => {
         <h1>GPUppy</h1>
         <p><i>What if we tried more power?</i></p>
         <JobList />
+        <Workers />
       </header>
     </div>
   );

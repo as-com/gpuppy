@@ -35,6 +35,7 @@ export class JobList extends React.Component<{}, {
             return <div>Loading...</div>
         } else {
             return <div>
+                <h2>Jobs</h2>
                 <table className={"jobs"}>
                     <tbody>
                     <tr>
