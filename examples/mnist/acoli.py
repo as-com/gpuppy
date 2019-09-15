@@ -227,3 +227,8 @@ def acoli_hist(initpos, foodfn, rttp, ttrp, ntrials, nsteps, nbins, visualize=Fa
         
     return histm, food
 
+
+if __name__ == "__main__":
+    print(acoli_hist([0,0], 1, .3,.2,100,1000,40,0)[0])
+    plt.hist(acoli_hist([0,0], 1, .3,.2,100,1000,40,0)[0], bins = 45)
+
