@@ -44,8 +44,8 @@ mongoose.connect('mongodb://localhost:27017/gpuppy', {
 const Job = mongoose.model('Job', {
     filename: String,
     command: String,
-    status: Number,
-    output: String,
+    status: {type: Number, default: 0},
+    output: {type: String, default: ""},
 });
 
 const port = 3000;
@@ -57,14 +57,14 @@ const listenerMap = {};
 
 wss.on('connection', (ws, request) => {
     const url = request.url;
-    const regex = /\/(.+)\/(listen|push)/;
+    const regex = /.+\/(.+?)\/(listen|push)/;
 
-    //console.log(url);
+    console.log(url);
     const m = regex.exec(url);
     if (m === null) throw m;
 
-    const jobId = m[0];
-    const op = m[1];
+    const jobId = m[1];
+    const op = m[2];
 
     if (op === 'listen') {
         if (!listenerMap.hasOwnProperty(jobId)) {
@@ -87,6 +87,7 @@ wss.on('connection', (ws, request) => {
         }
 
         ws.on('message', (message) => {
+            console.log(message);
             outputMap[jobId] += message;
 
             listenerMap[jobId].forEach(listener => {
@@ -141,7 +142,17 @@ app.post('/api/jobs/:id/finish', (req, res, next) => {
         if (err)
             return next(err);
 
-        Job.findOneAndUpdate({_id: jobId}, {status: 10}, (err, job) => {
+        let output = "";
+        console.log(outputMap);
+        if (outputMap.hasOwnProperty(jobId)) {
+            output = outputMap[jobId];
+            delete outputMap[jobId];
+        }
+        if (listenerMap.hasOwnProperty(jobId)) {
+            listenerMap[jobId].forEach(listener => listener.close());
+            delete listenerMap[jobId];
+        }
+        Job.findOneAndUpdate({_id: jobId}, {status: 10, output}, (err, job) => {
             if (err)
                 return next(err);
             return res.json({'status': 'job_finished'})
