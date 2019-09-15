@@ -127,9 +127,9 @@ async function workerStats() {
     }
 
     function readCpuStats() {
-        const output = child_process.execSync("cat /proc/stat");
-        const parts = output.split(/\s+/);
-        const cpu = (0 + parts[1] + parts[2] + parts[3]) / (0 + parts[1] + parts[2] + parts[3] + parts[4]);
+        const output = child_process.execSync("cat /proc/stat | head -n1");
+        const parts = output.toString().trim().split(/\s+/);
+        const cpu = (+parts[1] + +parts[2] + +parts[3]) / (+parts[1] + +parts[2] + +parts[3] + +parts[4]);
         cpuUtil = cpuUtil * 0.3 + cpu * 0.7;
     }
 
