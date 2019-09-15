@@ -65,6 +65,14 @@ app.get('/api/jobs', (req, res, next) => {
     });
 });
 
+app.post('/api/getJob', (req, res, next) => {
+    Job.findOneAndUpdate({status: 0}, {status: 1}, (err, job) => {
+        if (err)
+            return res.json([]);
+        return res.json([job.toObject()])
+    })
+});
+
 const port = 3000;
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
