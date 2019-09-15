@@ -122,7 +122,7 @@ async function workerStats() {
     }
 
     async function pushStats() {
-        await get(`${SERVER}/api/workers/${hostname}`, {
+        get(`${SERVER}/api/workers/${hostname}`, {
             method: "POST",
             json: true,
             body: {
@@ -136,7 +136,13 @@ async function workerStats() {
     }
 
     readGpuStats();
-    setInterval(pushStats, STAT_INTERVAL_MS);
+    while (true) {
+        await new Promise(resolve => {
+            setTimeout(resolve, STAT_INTERVAL_MS);
+        });
+
+        pushStats();
+    }
 }
 
 main().then(console.log).catch(console.error);
