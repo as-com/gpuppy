@@ -24,6 +24,7 @@ model.compile(optimizer ='adam', loss = 'sparse_categorical_crossentropy', metri
 
 model.fit(train_images, train_labels)
 
+model.save_weights('mnist.h5')
 
 test_loss, test_acc  = model.evaluate(test_images, test_labels)
 print(test_acc)
