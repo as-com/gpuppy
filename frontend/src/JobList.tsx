@@ -50,7 +50,10 @@ export class JobList extends React.Component<{}, {
                         <td>{x._id}</td>
                         {/*<td>{x.filename}</td>*/}
                         <td><code>{x.command}</code></td>
-                        <td>{x.status}</td>
+                        <td>{x.status === 0 ? <span className="badge badge-secondary">New</span> :
+                        x.status === 1 ? <span className="badge badge-info">Running</span> :
+                        x.status === 10 ? <span className="badge badge-success">Done</span> :
+                        <span className="badge badge-danger">Unknown</span>}</td>
                     </tr>)}
                     </tbody>
                 </table>
