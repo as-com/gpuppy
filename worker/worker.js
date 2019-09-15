@@ -3,10 +3,14 @@ const child_process = require("child_process");
 const WebSocket = require("ws");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
+const readline = require("readline");
 
 const SERVER = process.argv[2];
 const WS_SERVER = process.argv[3];
 console.log(SERVER, WS_SERVER);
+
+const STAT_INTERVAL_MS = 1000;
 
 async function main() {
     while (true) {
@@ -88,4 +92,52 @@ async function main() {
     }
 }
 
+async function workerStats() {
+    const hostname = os.hostname();
+    let gpuUtil = 0;
+    let cpuUtil = 0;
+    let gpuMem = 0;
+    let cpuMem = 0;
+    let gpuPower = 0;
+
+    function readGpuStats() {
+        const proc = child_process.spawn("nvidia-smi stats -d gpuUtil,memUtil,pwrDraw");
+
+        const rl = readline.createInterface({input: proc.stdout});
+        rl.on('line', (input) => {
+            const split = input.split(',').map((s) => s.trim());
+
+            const type = split[1];
+            const value = 0 + split[3];
+            if (type === "pwrDraw") {
+                gpuPower = value;
+            } else if (type === "memUtil") {
+                gpuMem = value;
+            } else if (type === "gpuUtil") {
+                gpuUtil = value;
+            } else {
+                console.log("unknown event " + type);
+            }
+        })
+    }
+
+    async function pushStats() {
+        await get(`${SERVER}/api/workers/${hostname}`, {
+            method: "POST",
+            json: true,
+            body: {
+                gpuUtil,
+                cpuUtil,
+                gpuMem,
+                cpuMem,
+                gpuPower,
+            }
+        })
+    }
+
+    readGpuStats();
+    setInterval(pushStats, STAT_INTERVAL_MS);
+}
+
 main().then(console.log).catch(console.error);
+workerStats().then(console.log).catch(console.error);
