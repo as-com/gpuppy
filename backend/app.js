@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const http = require('http');
 const multer = require('multer');
 const mongoose = require('mongoose');
@@ -6,6 +7,7 @@ const morgan = require('morgan');
 const uuidv4 = require('uuid/v4');
 const bodyParser = require('body-parser');
 const WebSocket = require('ws');
+const fs = require('fs');
 
 const app = express();
 app.use(morgan('dev'));
@@ -26,6 +28,9 @@ const upload = multer({
     }),
 });
 app.use('/api/datum', express.static('./uploads'));
+
+const artifactDirectory = './artifacts';
+app.use('/api/artum', express.static(artifactDirectory));
 
 mongoose.connect('mongodb://localhost:27017/gpuppy', {
     useNewUrlParser: true
@@ -115,6 +120,23 @@ app.post('/api/getJob', (req, res, next) => {
         if (err)
             return res.json([]);
         return res.json([job.toObject()])
+    })
+});
+
+app.post('/api/jobs/:id/finish', (req, res, next) => {
+    const artifact64 = req.body.artifact;
+    const jobId = req.params.id;
+
+    const artifact = Buffer.from(artifact64, 'base64');
+    fs.writeFile(path.join(artifactDirectory, jobId), (err) => {
+        if (err)
+            return next(err);
+
+        Job.findOneAndUpdate({_id: jobId}, {status: 10}, (err, job) => {
+            if (err)
+                return next(err);
+            return res.json({'status': 'job_finished'})
+        });
     })
 });
 
