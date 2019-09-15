@@ -67,10 +67,7 @@ async function main() {
         });
         let finishTime = Date.now();
 
-        await new Promise(resolve => {
-            setTimeout(resolve, 500);
-        });
-        const createOut = child_process.execSync("tar -cvzf upload.tar.gz .", {
+        const createOut = child_process.execSync("tar -cvzf ../upload.tar.gz .", {
             cwd: dirname
         });
 
@@ -78,7 +75,7 @@ async function main() {
             method: "POST",
             json: true,
             body: {
-                artifact: fs.readFileSync(path.join(dirname, "upload.tar.gz")).toString("base64"),
+                artifact: fs.readFileSync(path.join(dirname, "../upload.tar.gz")).toString("base64"),
                 startTime,
                 finishTime,
                 exitCode
