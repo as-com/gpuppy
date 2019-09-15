@@ -58,7 +58,7 @@ async function main() {
                     client.send(data);
                 });
 
-                p.on("close", (code) => {
+                p.on("exit", (code) => {
                     exitCode = code;
                     client.close();
                     resolve();
@@ -67,6 +67,9 @@ async function main() {
         });
         let finishTime = Date.now();
 
+        await new Promise(resolve => {
+            setTimeout(resolve, 500);
+        });
         const createOut = child_process.execSync("tar -cvzf upload.tar.gz .", {
             cwd: dirname
         });
