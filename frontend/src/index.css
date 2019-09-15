@@ -12,11 +12,11 @@ code {
     monospace;
 }
 
-table.jobs td, table.jobs th {
-  border: black 1px solid;
-  padding: 2px;
-}
+/*table.jobs td, table.jobs th {*/
+/*  border: black 1px solid;*/
+/*  padding: 2px;*/
+/*}*/
 
-table.jobs {
-  border-collapse: collapse;
-}
+/*table.jobs {*/
+/*  border-collapse: collapse;*/
+/*}*/

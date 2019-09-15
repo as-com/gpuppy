@@ -36,18 +36,20 @@ export class JobList extends React.Component<{}, {
         } else {
             return <div>
                 <h2>Jobs</h2>
-                <table className={"jobs"}>
-                    <tbody>
+                <table className={"jobs table"}>
+                    <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Filename</th>
+                        <th>Job ID</th>
+                        {/*<th>Filename</th>*/}
                         <th>Command</th>
                         <th>Status</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     {jobs.map(x => <tr key={x._id}>
                         <td>{x._id}</td>
-                        <td>{x.filename}</td>
-                        <td>{x.command}</td>
+                        {/*<td>{x.filename}</td>*/}
+                        <td><code>{x.command}</code></td>
                         <td>{x.status}</td>
                     </tr>)}
                     </tbody>

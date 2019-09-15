@@ -11,10 +11,10 @@ interface IWorker {
 
 function Worker(props: { worker: IWorker }) {
     return <div>
-        CPU: {props.worker.cpuUtil}%<br />
-        Memory: {props.worker.cpuMem}<br />
+        CPU: {(props.worker.cpuUtil * 100).toFixed(1)}%<br />
+        Memory: {(props.worker.cpuMem/100 * 7).toFixed(1)} / 7.0 G<br />
         GPU: {props.worker.gpuUtil}%<br/>
-        VRAM: {props.worker.gpuMem}<br />
+        VRAM: {(props.worker.gpuMem * 16).toFixed(1)} / 16.0 G<br />
         GPU Power: {props.worker.gpuPower} W<br/>
     </div>
 }
