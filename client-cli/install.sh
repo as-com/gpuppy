@@ -2,12 +2,20 @@
 
 export GPUPPY_DIR="$HOME/.gpuppy"
 
-git clone https://github.com/as-com/gpuppy $GPUPPY_DIR
-cd $GPUPPY_DIR/client-cli
+if [ -d $GPUPPY_DIR ]; then
+    cd $GPUPPY_DIR
+    git pull
+else
+    git clone https://github.com/as-com/gpuppy $GPUPPY_DIR
+    cd $GPUPPY_DIR
+fi
+cd client-cli
 
-pip3 install -q requests websocket-client
+echo "Installing dependencies"
+pip3 install requests websocket-client
 
-echo <<EOF
+cat <<EOF
+
 GPUppy is installed in $GPUPPY_DIR
 Please add the following command to your shell rc file:
 
