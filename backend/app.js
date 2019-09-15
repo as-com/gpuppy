@@ -33,7 +33,8 @@ const artifactDirectory = './artifacts';
 app.use('/api/artum', express.static(artifactDirectory));
 
 mongoose.connect('mongodb://localhost:27017/gpuppy', {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useFindAndModify: false,
 }, (err) => {
     if (err)
         throw err;
@@ -43,8 +44,8 @@ mongoose.connect('mongodb://localhost:27017/gpuppy', {
 const Job = mongoose.model('Job', {
     filename: String,
     command: String,
-    status: Number,
-    output: String,
+    status: {type: Number, default: 0},
+    output: {type: String, default: ""},
 });
 
 const port = 3000;
@@ -54,15 +55,16 @@ const wss = new WebSocket.Server({server});
 const outputMap = {};
 const listenerMap = {};
 
-wss.on('connection', (ws) => {
-    const url = ws.url;
-    const regex = /\/(.+)\/(listen|push)/;
+wss.on('connection', (ws, request) => {
+    const url = request.url;
+    const regex = /.+\/(.+?)\/(listen|push)/;
 
-    const m = regex.exec(str);
+    console.log(url);
+    const m = regex.exec(url);
     if (m === null) throw m;
 
-    const jobId = m[0];
-    const op = m[1];
+    const jobId = m[1];
+    const op = m[2];
 
     if (op === 'listen') {
         if (!listenerMap.hasOwnProperty(jobId)) {
@@ -80,10 +82,15 @@ wss.on('connection', (ws) => {
         if (!outputMap.hasOwnProperty(jobId)) {
             outputMap[jobId] = "";
         }
+        if (!listenerMap.hasOwnProperty(jobId)) {
+            listenerMap[jobId] = [];
+        }
+
         ws.on('message', (message) => {
+            console.log(message);
             outputMap[jobId] += message;
 
-            listenerMap.forEach(listener => {
+            listenerMap[jobId].forEach(listener => {
                 listener.send(message);
             })
         });
@@ -118,6 +125,8 @@ app.get('/api/jobs', (req, res, next) => {
 app.post('/api/getJob', (req, res, next) => {
     Job.findOneAndUpdate({status: 0}, {status: 1}, (err, job) => {
         if (err)
+            return next(err);
+        if (job === null)
             return res.json([]);
         return res.json([job.toObject()])
     })
@@ -128,11 +137,22 @@ app.post('/api/jobs/:id/finish', (req, res, next) => {
     const jobId = req.params.id;
 
     const artifact = Buffer.from(artifact64, 'base64');
-    fs.writeFile(path.join(artifactDirectory, jobId), (err) => {
+    // TODO: Should sanitize the filename.
+    fs.writeFile(path.join(artifactDirectory, jobId + '.tar.gz'), artifact, (err) => {
         if (err)
             return next(err);
 
-        Job.findOneAndUpdate({_id: jobId}, {status: 10}, (err, job) => {
+        let output = "";
+        console.log(outputMap);
+        if (outputMap.hasOwnProperty(jobId)) {
+            output = outputMap[jobId];
+            delete outputMap[jobId];
+        }
+        if (listenerMap.hasOwnProperty(jobId)) {
+            listenerMap[jobId].forEach(listener => listener.close());
+            delete listenerMap[jobId];
+        }
+        Job.findOneAndUpdate({_id: jobId}, {status: 10, output}, (err, job) => {
             if (err)
                 return next(err);
             return res.json({'status': 'job_finished'})
