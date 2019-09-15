@@ -41,7 +41,7 @@ app.post('/api/jobs', upload.single('file'), function (req, res, next) {
     job.save()
         .then(() => {
             res.json({
-                'status': 'success',
+                'status': 'job_queued',
             })
         })
         .catch(next);
