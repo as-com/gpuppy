@@ -122,7 +122,7 @@ async function workerStats() {
     }
 
     async function pushStats() {
-        get(`${SERVER}/api/workers/${hostname}`, {
+        await got(`${SERVER}/api/workers/${hostname}`, {
             method: "POST",
             json: true,
             body: {
