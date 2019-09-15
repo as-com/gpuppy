@@ -3,9 +3,16 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
 const uuidv4 = require('uuid/v4');
+const bodyParser = require('body-parser');
 
 const app = express();
 app.use(morgan('dev'));
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
 
 const upload = multer({
     storage: multer.diskStorage({
@@ -35,7 +42,7 @@ const Job = mongoose.model('Job', {
 
 app.post('/api/jobs', upload.single('file'), function (req, res, next) {
     const filename = req.file.filename;
-    const command = req.body.command;
+    const command = req.query.command;
 
     const job = new Job({filename, command, status: 0});
     job.save()
