@@ -44,7 +44,7 @@ async function main() {
         const pipInstall = child_process.execSync("pip3 install -r requirements.txt", {
             cwd: dirname
         });
-        console.log(pipInstall);
+        console.log(pipInstall.toString());
 
         let startTime;
         let exitCode;
